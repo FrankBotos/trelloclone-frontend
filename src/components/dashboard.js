@@ -4,6 +4,7 @@ import { useEffect, useState, useContext } from "react";
 import { UserContext } from "../context/usercontext";
 
 import CreateKanban from "../data/createKanban";
+import DeleteKanban from "../data/deleteKanban";
 
 export default function DashBoard(token){
 
@@ -11,35 +12,49 @@ export default function DashBoard(token){
 
     const [myKanbans, setMyKanbans] = useState(null);
     const [activeKanban, setActiveKanban] = useState(null);
+    const [activeKanbanID, setActiveKanbanID] = useState(null);
 
     const [createHidden, setCreateHidden] = useState(true);
     const [createdKanbanTitle, setCreatedKanbanTitle] = useState("");
 
     useEffect(() => {
         if (token && userC.name != null){
-            const data = GetAllKanbans()
-            .then((retrievedKanbans)=>{
-                
-                setMyKanbans(retrievedKanbans);//for confirming that kanbans were successfully retrieved
-
-                var temp = userC;
-                temp.myKanbans = retrievedKanbans;
-                setUserC(temp);
-
-            });
+          getKanbansAndSetContext();
         }
-
-        
-
     }, [token]);
 
-    
+    //if selectMostRecent is true, we will activate the most recent board
+    const getKanbansAndSetContext = (selectMostRecent) => {
+      GetAllKanbans()
+            .then((retrievedKanbans)=>{
+                setMyKanbans(retrievedKanbans);
+                var temp = userC;
+                temp.myKanbans = retrievedKanbans;
+
+                //sort by date upon retrieval
+                temp.myKanbans.sort(function(a,b){
+                  return new Date(b.data.created) - new Date(a.data.created);
+                })
+
+                //TODO:filter out all boards made by other users 
+
+                setUserC(temp);
+
+                if (selectMostRecent) {
+                  setActiveKanban(userC.myKanbans[0])
+                  setActiveKanbanID(userC.myKanbans[0].id)
+                }
+
+            });
+    }
+  
 
     if (userC.myKanbans){
         return <div>
         <NavBar/>
 
         <div>
+          
 
         <div
           onClick={() => {
@@ -50,7 +65,17 @@ export default function DashBoard(token){
           -New Kanban
         </div>
         <div className="md:inline py-5">-Rename Kanban</div>
-        <div className="md:inline py-5">-Delete Active Kanban</div>
+
+        <div className="md:inline py-5" 
+        onClick={()=>{
+
+          DeleteKanban(activeKanban.id);
+          setActiveKanban(null);
+          getKanbansAndSetContext();
+          
+          
+        
+        }}>-Delete Active Kanban</div>
         
       </div>
 
@@ -70,45 +95,23 @@ export default function DashBoard(token){
             />
             <button
               className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
-              type="button"
-              onClick={ () => {
+              type="submit"
+              onClick={ (e) => {
+                e.preventDefault();
                 var uid = userC.id;
-                CreateKanban(createdKanbanTitle, uid);
-                
-                  var temp = userC;
-
-                  //if backend successfully created the board, then update context
-                  temp.myKanbans.push({
-                    
-                    "data":{
-                    "uid": uid,
-                    "title": createdKanbanTitle,
-                    "archived": false,
-                    "columns": null,
-                    "items": null
-                    }
-
-                  });
+                CreateKanban(createdKanbanTitle, uid, new Date());
 
 
-                  
-                 //this block is used to access the nested "postuserid" array and update state
-                setUserC((prevState) => ({
-                ...prevState,
-                data: {
-                ...prevState,
-                data: temp,
-                },
-                }));
-                console.log(userC);
-    
+                  //on create, refresh all boards from back-end to ensure there is "id" property on all items
+                  //passing in "true" to signifiy that we want to set our activeKanban to the most recently created board
+                  getKanbansAndSetContext(true);
+
                   
 
                   setCreateHidden(true);
                   setCreatedKanbanTitle("");
 
                   
-
               
               }
             }
@@ -134,13 +137,26 @@ export default function DashBoard(token){
             <div className="col-span-1 bg-red-50">
                 <div className="font-bold text-md">Your Kanban Boards</div>
                 {userC.myKanbans.map((board)=>{
-                    return <div>{board.data.title}</div>
+
+                    return <div 
+                    onClick={()=>{
+                      setActiveKanban(board);
+                      setActiveKanbanID(board.id);
+                    }}
+                    className={
+                      activeKanbanID == board.id ?
+                      "font-bold"
+                      :
+                      "font-normal"
+                    }
+                    >{board.data.title}</div>
+
                 })}
             </div>
             <div className="col-span-4 bg-red-100">
                 {
                     activeKanban ? 
-                    <div>{activeKanban.data.title}</div>
+                    <div>{JSON.stringify(activeKanban)}</div>
                     :
                     <div>Please select a board to start working!</div>
                 }

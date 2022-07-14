@@ -1,7 +1,4 @@
-import { useState, useContext } from "react";
-import { UserContext } from "../context/usercontext";
-
-export default function CreateKanban(title, uid) {
+export default function CreateKanban(title, uid, creationDate) {
 
     async function runQuery() {
 
@@ -10,7 +7,8 @@ export default function CreateKanban(title, uid) {
         "title": title,
         "archived": false,
         "columns": null,
-        "items": null
+        "items": null,
+        "created": creationDate
     }
 
     var url = process.env.REACT_APP_EXPRESS_URL + "create";
