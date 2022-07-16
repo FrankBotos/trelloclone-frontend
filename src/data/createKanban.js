@@ -4,7 +4,7 @@ export default function CreateKanban(title, uid, creationDate) {
 
       var initColumns = {
         ["1"]: {
-          name: "To do",
+          name: "To Do",
           items: [],
         },
         ["2"]: {
