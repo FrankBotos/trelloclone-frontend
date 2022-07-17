@@ -2,18 +2,44 @@
 //https://codesandbox.io/s/jovial-leakey-i0ex5?file=/src/App.js
 //https://www.youtube.com/watch?v=Vqa9NMzF3wc&ab_channel=LogRocket
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { UserContext } from "../context/usercontext";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
-const itemsFromBackend = [
-  { id: "1234", content: "First task" },
-  { id: "1123", content: "Second task" },
-  { id: "1113", content: "Third task" },
-  { id: "1112", content: "Fourth task" },
-  { id: "1111", content: "Fifth task" }
-];
+import UpdateKanbanColumns from "../data/updateKanbanColumns";
 
-const onDragEnd = (result, columns, setColumns) => {
+const OnDragEnd = (result, columns, setColumns, boardId) => {
+  
+  if(result.reason == 'CREATE') {
+    const column = columns[1];
+    const copiedItems = [...column.items];
+    copiedItems.unshift(result.task);
+    setColumns({
+      ...columns,
+      [1]: {
+        ...column,
+        items: copiedItems
+      }
+    });
+    return;
+  }
+
+  if(result.reason == 'DELETE') {
+    const column = columns[result.droppableId];
+    const copiedItems = [...column.items];
+
+    copiedItems.splice(result.taskIndex, 1);
+
+    setColumns({
+      ...columns,
+      [result.droppableId]: {
+        ...column,
+        items: copiedItems
+      }
+    });
+    return;
+  }
+
   if (!result.destination) return;
   const { source, destination } = result;
 
@@ -48,22 +74,49 @@ const onDragEnd = (result, columns, setColumns) => {
       }
     });
   }
-  console.log("sync board here");
 };
+
+//syncs board with database
+const SyncBoard = (id, cols) => {
+
+  UpdateKanbanColumns(id, cols);
+  
+  console.log("synced board: " + id);
+  console.log(cols);
+
+}
 
 export default function KanbanBoard(board) {
 
+  useEffect(()=>{
+    //no need to sync on initial load, as we are passing complete board
+    setColumns(board.board.data.columns);
+  },[board])
+
+  
+
+  const { userC, setUserC } = useContext(UserContext);
+
   const [columns, setColumns] = useState(board.board.data.columns);
+  
 
   const [newItemHidden, setNewItemHidden] = useState(true);
   const [newItemTitle, setNewItemTitle] = useState("");
 
+  useEffect(()=>{
+    SyncBoard(board.board.id, columns);
+  },[columns])
+
   return (
     <div>
+
+      <div className="text-2xl font-semibold">{board.board.data.title}</div>
+
 
     <div onClick={()=>{
       setNewItemHidden(false);
     }}>Add New Task</div>
+
 
     {/*form for new task*/}
     <div hidden={newItemHidden}>
@@ -85,21 +138,29 @@ export default function KanbanBoard(board) {
 
                 var task = {id: JSON.stringify(Date.now()), content: newItemTitle}
 
-                var tempCols = columns;
 
+                //if you copy the state, then update the copied variable, the "DragDropContext" will propogate the changes made to the actual state
+                /*
+                var tempCols = columns;
                 Object.values(tempCols).map(function(val) {
                   if (val.name == "To Do"){
                     val.items.push(task)
                   }
-                });
+                });*/
 
-                console.log(tempCols);
+                OnDragEnd({
+                  reason: "CREATE",
+                  task: task
+                },columns, setColumns, board.board.id);
+
+                
                 
                 
 
 
                 setNewItemHidden(true);
                 setNewItemTitle("");
+                SyncBoard(board.board.id, columns);
               }
             }
             >
@@ -119,13 +180,15 @@ export default function KanbanBoard(board) {
         </form>
     </div>
 
-    <div style={{ display: "flex", justifyContent: "center", height: "100%" }}>
-        
-        
+
+    <div style={{ display: "flex", justifyContent: "center", height: "100%" }}> 
 
       <DragDropContext
-        onDragEnd={result => onDragEnd(result, columns, setColumns)}
+        onDragEnd={result => {OnDragEnd(result, columns, setColumns, board.board.id) 
+                              SyncBoard(board.board.id, columns)}}
       >
+        
+
         {Object.entries(columns).map(([columnId, column], index) => {
           return (
             <div
@@ -136,6 +199,9 @@ export default function KanbanBoard(board) {
               }}
               key={columnId}
             >
+
+              
+
               <h2>{column.name}</h2>
               <div style={{ margin: 8 }}>
                 <Droppable droppableId={columnId} key={columnId}>
@@ -153,6 +219,7 @@ export default function KanbanBoard(board) {
                           minHeight: 500
                         }}
                       >
+
                         {column.items.map((item, index) => {
                           return (
                             <Draggable
@@ -179,6 +246,19 @@ export default function KanbanBoard(board) {
                                     }}
                                   >
                                     {item.content}
+                                    <button className="bg-slate-300 rounded text-sm px-2 mx-4"onClick={()=>{
+                                      
+                                      OnDragEnd({
+                                        reason: "DELETE",
+                                        draggableId: item.id,
+                                        droppableId: columnId,
+                                        taskIndex: index
+                                      },columns, setColumns, board.board.id);
+
+                                      SyncBoard(board.board.id, columns);
+                                      
+
+                                      }}>Delete</button>
                                   </div>
                                 );
                               }}
@@ -194,6 +274,7 @@ export default function KanbanBoard(board) {
             </div>
           );
         })}
+        
       </DragDropContext>
       </div>
     </div>

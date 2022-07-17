@@ -212,6 +212,7 @@ export default function DashBoard(token){
 
                     return <div 
                     onClick={()=>{
+                      getKanbansAndSetContext();
                       setActiveKanban(board);
                       setActiveKanbanID(board.id);
                     }}

@@ -9,6 +9,7 @@ export default function UpdateKanban(newKanban){
       const data = await res.json();
       return data;
       }
-  
+
+      console.log(newKanban);
       return runQuery();
 }
