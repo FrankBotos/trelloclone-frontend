@@ -6,7 +6,7 @@ export const UserProvider = ({ children }) => {
   const [userC, setUserC] = useState({
     id: null,
     name: null,
-    myKanbans: []
+    myKanbans: [],
   });
 
   return (
