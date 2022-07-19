@@ -7,7 +7,9 @@ import { UserContext } from "../context/usercontext";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 import UpdateKanbanColumns from "../data/updateKanbanColumns";
+import GetAllKanbans from "../data/getAllKanbans";
 
+export default function KanbanBoard(board) {
 const OnDragEnd = (result, columns, setColumns, boardId) => {
   
   if(result.reason == 'CREATE') {
@@ -21,6 +23,10 @@ const OnDragEnd = (result, columns, setColumns, boardId) => {
         items: copiedItems
       }
     });
+    
+    /*crucial to update the intitial board as well, since it will work with context to keep state throughout app*/
+    board.board.data.columns[1].items.unshift(result.task);
+
     return;
   }
 
@@ -37,6 +43,11 @@ const OnDragEnd = (result, columns, setColumns, boardId) => {
         items: copiedItems
       }
     });
+    
+    //updating board to reflect drag and drop state
+    var tempboard = board.board.data.columns[result.droppableId].items.filter(item=>item.id != result.draggableId);
+    board.board.data.columns[result.droppableId].items = tempboard;
+
     return;
   }
 
@@ -61,6 +72,17 @@ const OnDragEnd = (result, columns, setColumns, boardId) => {
         items: destItems
       }
     });
+
+
+    //updating board to reflect the drag and drop state after an item is moved
+    var tempboard = board.board.data.columns;
+    var boardSource = tempboard[result.source.droppableId].items[result.source.index];
+    var colAfterRemove = tempboard[result.source.droppableId].items.filter(item=>item != boardSource)
+    tempboard[result.source.droppableId].items = colAfterRemove;
+    tempboard[result.destination.droppableId].items[result.destination.index] = boardSource;
+    board.board.data.columns = tempboard;
+
+
   } else {
     const column = columns[source.droppableId];
     const copiedItems = [...column.items];
@@ -79,14 +101,14 @@ const OnDragEnd = (result, columns, setColumns, boardId) => {
 //syncs board with database
 const SyncBoard = (id, cols) => {
 
+  
   UpdateKanbanColumns(id, cols);
   
-  console.log("synced board: " + id);
-  console.log(cols);
+  
 
 }
 
-export default function KanbanBoard(board) {
+
 
   useEffect(()=>{
     //no need to sync on initial load, as we are passing complete board
@@ -104,16 +126,18 @@ export default function KanbanBoard(board) {
   const [newItemTitle, setNewItemTitle] = useState("");
 
   useEffect(()=>{
-    SyncBoard(board.board.id, columns);
+    SyncBoard(board.board.id, columns); 
   },[columns])
 
   return (
     <div>
 
-      <div className="text-2xl font-semibold">{board.board.data.title}</div>
+      <div className="text-2xl font-semibold m-4">Working On: 
+      <span className="text-3xl font-bold">"{board.board.data.title}"</span>
+      </div>
 
 
-    <div onClick={()=>{
+    <div className="bg-purple-300 w-48 p-4 mx-auto rounded-lg text-slate-700 text-sm font-semibold" onClick={()=>{
       setNewItemHidden(false);
     }}>Add New Task</div>
 
@@ -137,30 +161,22 @@ export default function KanbanBoard(board) {
 
 
                 var task = {id: JSON.stringify(Date.now()), content: newItemTitle}
-
-
-                //if you copy the state, then update the copied variable, the "DragDropContext" will propogate the changes made to the actual state
-                /*
-                var tempCols = columns;
-                Object.values(tempCols).map(function(val) {
-                  if (val.name == "To Do"){
-                    val.items.push(task)
-                  }
-                });*/
-
+                
+                
                 OnDragEnd({
                   reason: "CREATE",
                   task: task
-                },columns, setColumns, board.board.id);
-
-                
-                
-                
-
+                },columns, setColumns, board.board.id);               
 
                 setNewItemHidden(true);
                 setNewItemTitle("");
+
+                
+                  
+                
+
                 SyncBoard(board.board.id, columns);
+
               }
             }
             >
@@ -202,7 +218,8 @@ export default function KanbanBoard(board) {
 
               
 
-              <h2>{column.name}</h2>
+              <div className="text-2xl mt-4 text-slate-700">{column.name}</div>
+
               <div style={{ margin: 8 }}>
                 <Droppable droppableId={columnId} key={columnId}>
                   {(provided, snapshot) => {
@@ -212,12 +229,13 @@ export default function KanbanBoard(board) {
                         ref={provided.innerRef}
                         style={{
                           background: snapshot.isDraggingOver
-                            ? "lightblue"
-                            : "lightgrey",
+                            ? "#dbeafe"
+                            : "#f5f3ff",
                           padding: 4,
                           width: 250,
                           minHeight: 500
                         }}
+                        className="rounded-xl"
                       >
 
                         {column.items.map((item, index) => {
@@ -239,14 +257,17 @@ export default function KanbanBoard(board) {
                                       margin: "0 0 8px 0",
                                       minHeight: "50px",
                                       backgroundColor: snapshot.isDragging
-                                        ? "#263B4A"
-                                        : "#456C86",
-                                      color: "white",
+                                        ? "#e0f2fe"
+                                        : "#ecfeff",
+                                      color: "#334155",
                                       ...provided.draggableProps.style
                                     }}
+                                    className="rounded-xl border border-indigo-600"
                                   >
-                                    {item.content}
-                                    <button className="bg-slate-300 rounded text-sm px-2 mx-4"onClick={()=>{
+                                    <div className="m-2 font-semibold">{item.content}</div>
+                                    
+                                    <div>
+                                    <button className="border border-slate-500 bg-slate-300 text-slate-500 rounded text-sm font-semibold px-2 mx-4"onClick={()=>{
                                       
                                       OnDragEnd({
                                         reason: "DELETE",
@@ -258,7 +279,8 @@ export default function KanbanBoard(board) {
                                       SyncBoard(board.board.id, columns);
                                       
 
-                                      }}>Delete</button>
+                                      }}>X</button>
+                                    </div>
                                   </div>
                                 );
                               }}

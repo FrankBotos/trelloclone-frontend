@@ -73,7 +73,7 @@ export default function Login(){
 			{auth ? (
 
 				<div>
-				<DashBoard token={token} />
+				<DashBoard token={token}/>
 				<button className="text-xl bg-slate-200 rounded-xl p-4 m-4" onClick={logoutWithGoogle}>Log Out</button>
 				</div>
 

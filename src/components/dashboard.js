@@ -5,11 +5,9 @@ import NavBar from "./navbar";
 import GetAllKanbans from "../data/getAllKanbans";
 import KanbanBoard from "./kanbanboard";
 
-
-
 import CreateKanban from "../data/createKanban";
 import DeleteKanban from "../data/deleteKanban";
-import UpdateKanban from "../data/updateKanban";
+import UpdateKanbanTitle from "../data/updateKanbanTitle";
 
 export default function DashBoard(token){
 
@@ -33,6 +31,8 @@ export default function DashBoard(token){
 
     //if selectMostRecent is true, we will activate the most recent board
     const getKanbansAndSetContext = (selectMostRecent) => {
+     
+      
       GetAllKanbans()
             .then((retrievedKanbans)=>{
                 setMyKanbans(retrievedKanbans);
@@ -53,7 +53,15 @@ export default function DashBoard(token){
                   setActiveKanbanID(userC.myKanbans[0].id)
                 }
 
+                
+                
+
             });
+
+            //console.log(userC.myKanbans)
+
+            
+            
     }
   
 
@@ -61,20 +69,25 @@ export default function DashBoard(token){
         return <div>
         <NavBar/>
 
-        <div>
+        <div className="m-8">
           
 
         <div
           onClick={() => {
+            getKanbansAndSetContext();
             setCreateHidden(false);
             setRenameHidden(true);
+            
           }}
-          className="md:inline py-5"
+          className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded"
         >
-          -New Kanban
+          New Kanban
         </div>
-        <div className="md:inline py-5"
+        <div className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded"
         onClick={()=>{
+          
+          getKanbansAndSetContext();
+          
           if (activeKanban){
             setRenameHidden(false);
             setCreateHidden(true);
@@ -83,22 +96,29 @@ export default function DashBoard(token){
           }
 
         }}
-        >-Rename Kanban</div>
+        >Rename Kanban</div>
 
-        <div className="md:inline py-5" 
+        <div className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded" 
         onClick={()=>{
 
-          DeleteKanban(activeKanban.id);
-          setActiveKanban(null);
-          getKanbansAndSetContext();
+          DeleteKanban(activeKanban.id).then(()=>{
+            setActiveKanban(null);
+            setActiveKanbanID(null);
+  
+            getKanbansAndSetContext();
+  
+            setCreateHidden(true);
+            setRenameHidden(true);
+          })
+          
           
           
         
-        }}>-Delete Active Kanban</div>
+        }}>Delete Active Kanban</div>
         
       </div>
 
-      {/*dropdown form for new board name*/}
+      {/*dropdown form for new board*/}
       <div
         className="z-40 bg-blue-100 w-3/5 mx-auto rounded m-4"
         hidden={createHidden}
@@ -119,19 +139,14 @@ export default function DashBoard(token){
               onClick={ (e) => {
                 e.preventDefault();
                 var uid = userC.id;
-                CreateKanban(createdKanbanTitle, uid, new Date());
-
-
+                CreateKanban(createdKanbanTitle, uid, new Date()).then(()=>{
                   //on create, refresh all boards from back-end to ensure there is "id" property on all items
                   //passing in "true" to signifiy that we want to set our activeKanban to the most recently created board
                   getKanbansAndSetContext(true);
-
-                  
-
                   setCreateHidden(true);
+                  setRenameHidden(true);
                   setCreatedKanbanTitle("");
-
-                  
+                })                  
               
               }
             }
@@ -166,6 +181,7 @@ export default function DashBoard(token){
               aria-label="Board Title"
               value={renamedKanbanTitle}
               onChange={(e) => setRenamedKanbanTitle(e.target.value)}
+              
             />
             <button
               className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
@@ -173,21 +189,24 @@ export default function DashBoard(token){
               onClick={ (e) => {
                 e.preventDefault();
                 activeKanban.data.title = renamedKanbanTitle;
-                UpdateKanban(activeKanban);
 
-                  //on create, refresh all boards from back-end to ensure there is "id" property on all items
-                  //passing in "true" to signifiy that we want to set our activeKanban to the most recently created board
-                  getKanbansAndSetContext(true);
+                
+                UpdateKanbanTitle(activeKanban.id, activeKanban.data.title).then(()=>{
+                  //refresh all boards from back-end to ensure there is "id" property on all items
+                  getKanbansAndSetContext();
                   
                   setRenameHidden(true);
                   setRenamedKanbanTitle("");
+                })
+
+                  
 
                   
               
               }
             }
             >
-              Create
+              Rename
             </button>
 
             <button
@@ -205,33 +224,53 @@ export default function DashBoard(token){
 
 
         
-        <div className="grid grid-cols-5">
-            <div className="col-span-1 bg-red-50">
-                <div className="font-bold text-md">Your Kanban Boards</div>
+        <div className="grid grid-cols-5 rounded-xl">
+            <div className="col-span-1 bg-red-50 bg-opacity-50">
+                <div className="font-extrabold text-md">Your Kanban Boards</div>
                 {userC.myKanbans.map((board)=>{
 
                     return <div 
                     onClick={()=>{
-                      getKanbansAndSetContext();
-                      setActiveKanban(board);
-                      setActiveKanbanID(board.id);
+
+                      
+                        
+
+                        //making sure that we can only click inactive kanbans
+                        if (!activeKanban || activeKanban.id != board.id){
+                          
+                          setActiveKanban(board);
+                          setActiveKanbanID(board.id);
+                          getKanbansAndSetContext();
+                        } else {
+                          setActiveKanban(null);
+                          setActiveKanbanID(null);
+                          getKanbansAndSetContext();
+                        }
+                      
+                        
+                      //close any open forms on switch
+                      setCreateHidden(true);
+                      setRenameHidden(true);
+
+                      
+
                     }}
                     className={
                       activeKanbanID == board.id ?
-                      "font-bold"
+                      "font-extrabold text-md text-slate-700"
                       :
-                      "font-normal"
+                      "font-semibold text-md text-slate-700"
                     }
                     >{board.data.title}</div>
 
                 })}
             </div>
-            <div className="col-span-4 bg-red-100">
+            <div className="col-span-4 bg-red-100 bg-opacity-50">
                 {
-                    activeKanban ? 
+                    activeKanbanID ? 
                     <div><KanbanBoard board={activeKanban}/></div>
                     :
-                    <div>Please select a board to start working!</div>
+                    <div className="my-48 font-semibold text-slate-700">Please select a board to start working!</div>
                 }
             </div>
         </div>

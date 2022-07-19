@@ -1,12 +1,12 @@
-export default function UpdateKanbanColumns(id, newCols){
+export default function UpdateKanbanTitle(id, newTitle){
     async function runQuery() {
-      var url = process.env.REACT_APP_EXPRESS_URL + "updatecols";
+      var url = process.env.REACT_APP_EXPRESS_URL + "updatetitle";
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             id: id,
-            columns: newCols
+            title: newTitle
         }),
       });
       const data = await res.json();

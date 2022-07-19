@@ -10,6 +10,7 @@ export default function UpdateKanban(newKanban){
       return data;
       }
 
-      console.log(newKanban);
+      console.log(newKanban)
+      
       return runQuery();
 }

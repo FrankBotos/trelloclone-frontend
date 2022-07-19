@@ -8,7 +8,7 @@ function App() {
 	return (
 
 		<UserProvider>
-		<div className="App">
+		<div className="App h-screen bg-gradient-to-r from-violet-400 to-pink-300">
 			<Login/>
 		</div>
 		</UserProvider>
