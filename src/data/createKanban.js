@@ -1,16 +1,16 @@
 export default function CreateKanban(title, uid, creationDate) {
   async function runQuery() {
     var initColumns = {
-      ["1"]: {
+      "1": {
         name: "To Do",
         items: [],
       },
-      ["2"]: {
+      "2": {
         name: "In Progress",
         items: [],
       },
 
-      ["3"]: {
+      "3": {
         name: "Done",
         items: [],
       },

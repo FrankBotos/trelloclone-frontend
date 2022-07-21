@@ -2,11 +2,11 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 
 import { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/usercontext";
-import DashBoard from "./dashboard";
+import { UserContext } from "../context/userContext";
+import DashBoard from "./dashBoard";
 
 export default function Login() {
-  const { userC, setUserC } = useContext(UserContext);
+  const { setUserC } = useContext(UserContext);
 
   const [auth, setAuth] = useState(
     false || window.localStorage.getItem("auth") === "true"
@@ -40,7 +40,7 @@ export default function Login() {
         setUserC(tempContext);
       }
     });
-  }, []);
+  }, [setUserC]);
 
   const loginWithGoogle = () => {
     firebase
@@ -73,24 +73,24 @@ export default function Login() {
         <div>
           <DashBoard token={token} />
           <button
-            className="text-xl bg-slate-200 rounded-xl p-4 m-4"
+            className="text-xl bg-slate-200 hover:bg-slate-300 rounded-xl p-4 m-4"
             onClick={logoutWithGoogle}
           >
             Log Out
           </button>
         </div>
       ) : (
-        <div className="w-4/5 mx-auto my-16 p-16 bg-slate-50 shadow-lg rounded-xl">
+        <div className="w-3/5 mx-auto bg-slate-50 shadow-lg rounded-xl py-24">
           <div className="text-3xl p-8">
             Welcome to TrelloClone! Please Log In to get started!
           </div>
           <button
-            className="text-xl bg-slate-200 rounded-xl p-4"
+            className="text-xl bg-slate-200 hover:bg-slate-300 rounded-xl p-4"
             onClick={loginWithGoogle}
           >
             Log In with Google
           </button>
-        </div>
+        </div>        
       )}
     </div>
   );

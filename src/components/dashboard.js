@@ -1,13 +1,15 @@
 import { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/usercontext";
+import { UserContext } from "../context/userContext";
 
-import NavBar from "./navbar";
+import NavBar from "./navBar";
 import GetAllKanbans from "../data/getAllKanbans";
-import KanbanBoard from "./kanbanboard";
+import KanbanBoard from "./kanbanBoard";
 
 import CreateKanban from "../data/createKanban";
 import DeleteKanban from "../data/deleteKanban";
 import UpdateKanbanTitle from "../data/updateKanbanTitle";
+
+import { PlusCircleIcon, PencilAltIcon, TrashIcon, ViewBoardsIcon } from '@heroicons/react/outline';
 
 export default function DashBoard(token) {
   const { userC, setUserC } = useContext(UserContext);
@@ -65,12 +67,13 @@ export default function DashBoard(token) {
               setCreateHidden(false);
               setRenameHidden(true);
             }}
-            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded"
+            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded cursor-pointer hover:bg-purple-800"
           >
-            New Kanban
+            <PlusCircleIcon className="inline w-5 h-5"/>
+            <div className="inline mx-2">New Kanban</div>
           </div>
           <div
-            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded"
+            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded cursor-pointer hover:bg-purple-800"
             onClick={() => {
               getKanbansAndSetContext();
 
@@ -82,11 +85,12 @@ export default function DashBoard(token) {
               }
             }}
           >
-            Rename Kanban
+            <PencilAltIcon className="inline w-5 h-5"/>
+            <div className="inline mx-2">Rename Kanban</div>
           </div>
 
           <div
-            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded"
+            className="md:inline p-2 m-2 bg-purple-700 text-slate-100 font-semibold rounded cursor-pointer hover:bg-purple-800"
             onClick={() => {
               DeleteKanban(activeKanban.id).then(() => {
                 setActiveKanban(null);
@@ -99,28 +103,30 @@ export default function DashBoard(token) {
               });
             }}
           >
-            Delete Active Kanban
+            <TrashIcon className="inline w-5 h-5"/>
+            <div className="inline mx-2">Delete Kanban</div>
           </div>
         </div>
 
         {/*dropdown form for new board*/}
         <div
-          className="z-40 bg-blue-100 w-3/5 mx-auto rounded m-4"
+          className="z-40 bg-blue-50 w-2/5 mx-auto rounded m-4"
           hidden={createHidden}
         >
-          <div>Please name your new Kanban Board</div>
+          <div className="py-2 font-semibold text-slate-700">Please name your new Kanban Board</div>
           <form className="w-4/5 mx-auto">
             <div className="flex items-center border-b border-teal-500 py-2">
               <input
-                className="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+                className="appearance-none bg-white rounded-xl border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
                 type="text"
                 aria-label="Board Title"
                 value={createdKanbanTitle}
                 onChange={(e) => setCreatedKanbanTitle(e.target.value)}
               />
               <button
-                className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+                className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-sm text-white font-semibold py-1 px-2 rounded disabled:bg-slate-500 disabled:text-slate-300"
                 type="submit"
+                disabled={createdKanbanTitle === ""}
                 onClick={(e) => {
                   e.preventDefault();
                   var uid = userC.id;
@@ -132,13 +138,14 @@ export default function DashBoard(token) {
                     setRenameHidden(true);
                     setCreatedKanbanTitle("");
                   });
+
                 }}
               >
                 Create
               </button>
 
               <button
-                className="flex-shrink-0 border-transparent border-4 text-teal-500 hover:text-teal-800 text-sm py-1 px-2 rounded"
+                className="flex-shrink-0 border-transparent border-4 text-slate-700 hover:text-slate-800 text-sm py-1 px-2 rounded font-semibold"
                 type="button"
                 onClick={() => {
                   setCreateHidden(true);
@@ -152,22 +159,23 @@ export default function DashBoard(token) {
 
         {/*dropdown form for updating board name*/}
         <div
-          className="z-40 bg-blue-100 w-3/5 mx-auto rounded m-4"
+          className="z-40 bg-blue-50 w-2/5 mx-auto rounded m-4"
           hidden={renameHidden}
         >
-          <div>Please enter a new title</div>
+          <div className="py-2 font-semibold text-slate-700">Please enter a new title</div>
           <form className="w-4/5 mx-auto">
             <div className="flex items-center border-b border-teal-500 py-2">
               <input
-                className="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+                className="appearance-none bg-white rounded-xl border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
                 type="text"
                 aria-label="Board Title"
                 value={renamedKanbanTitle}
                 onChange={(e) => setRenamedKanbanTitle(e.target.value)}
               />
               <button
-                className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+                className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-sm text-white font-semibold py-1 px-2 rounded disabled:bg-slate-500 disabled:text-slate-300"
                 type="submit"
+                disabled={renamedKanbanTitle === ""}
                 onClick={(e) => {
                   e.preventDefault();
                   activeKanban.data.title = renamedKanbanTitle;
@@ -188,7 +196,7 @@ export default function DashBoard(token) {
               </button>
 
               <button
-                className="flex-shrink-0 border-transparent border-4 text-teal-500 hover:text-teal-800 text-sm py-1 px-2 rounded"
+                className="flex-shrink-0 border-transparent border-4 text-slate-700 hover:text-slate-800 text-sm py-1 px-2 rounded font-semibold"
                 type="button"
                 onClick={() => {
                   setRenameHidden(true);
@@ -200,15 +208,15 @@ export default function DashBoard(token) {
           </form>
         </div>
 
-        <div className="grid grid-cols-5 rounded-xl">
+        <div className="grid grid-cols-8 rounded-xl">
           <div className="col-span-1 bg-red-50 bg-opacity-50">
-            <div className="font-extrabold text-md">Your Kanban Boards</div>
+            <div className="font-extrabold text-lg my-4">Your Kanban Boards</div>
             {userC.myKanbans.map((board) => {
               return (
                 <div
                   onClick={() => {
                     //making sure that we can only click inactive kanbans
-                    if (!activeKanban || activeKanban.id != board.id) {
+                    if (!activeKanban || activeKanban.id !== board.id) {
                       setActiveKanban(board);
                       setActiveKanbanID(board.id);
                       getKanbansAndSetContext();
@@ -223,20 +231,20 @@ export default function DashBoard(token) {
                     setRenameHidden(true);
                   }}
                   className={
-                    activeKanbanID == board.id
-                      ? "font-extrabold text-md text-slate-700"
-                      : "font-semibold text-md text-slate-700"
+                    activeKanbanID === board.id
+                      ? "m-1 p-1 font-extrabold text-md text-slate-700 border-2 border-slate-800 mx-auto rounded-lg bg-fuchsia-100 cursor-pointer"
+                      : "m-1 p-1 font-semibold text-md text-slate-700 cursor-pointer"
                   }
-                >
-                  {board.data.title}
+                > 
+                    <div className="text-left w-full"><ViewBoardsIcon className="inline w-8 h-8 mr-2"/>{board.data.title}</div>
                 </div>
               );
             })}
           </div>
-          <div className="col-span-4 bg-red-100 bg-opacity-50">
+          <div className="col-span-7 bg-red-100 bg-opacity-50">
             {activeKanbanID ? (
               <div>
-                <KanbanBoard board={activeKanban} />
+                <KanbanBoard board={activeKanban} /> 
               </div>
             ) : (
               <div className="my-48 font-semibold text-slate-700">

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
-import './config/firebaseconfig';
+import './config/firebaseConfig';
 
 
 import App from './App';

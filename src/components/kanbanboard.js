@@ -2,16 +2,16 @@
 //https://codesandbox.io/s/jovial-leakey-i0ex5?file=/src/App.js
 //https://www.youtube.com/watch?v=Vqa9NMzF3wc&ab_channel=LogRocket
 
-import { useEffect, useState, useContext } from "react";
-import { UserContext } from "../context/usercontext";
+import { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 import UpdateKanbanColumns from "../data/updateKanbanColumns";
-import GetAllKanbans from "../data/getAllKanbans";
+
+import { PlusCircleIcon, TrashIcon, EyeIcon } from '@heroicons/react/outline';
 
 export default function KanbanBoard(board) {
   const OnDragEnd = (result, columns, setColumns, boardId) => {
-    if (result.reason == "CREATE") {
+    if (result.reason === "CREATE") {
       const column = columns[1];
       const copiedItems = [...column.items];
       copiedItems.unshift(result.task);
@@ -29,7 +29,7 @@ export default function KanbanBoard(board) {
       return;
     }
 
-    if (result.reason == "DELETE") {
+    if (result.reason === "DELETE") {
       const column = columns[result.droppableId];
       const copiedItems = [...column.items];
 
@@ -45,7 +45,7 @@ export default function KanbanBoard(board) {
 
       //updating board to reflect drag and drop state
       var tempboard = board.board.data.columns[result.droppableId].items.filter(
-        (item) => item.id != result.draggableId
+        (item) => item.id !== result.draggableId
       );
       board.board.data.columns[result.droppableId].items = tempboard;
 
@@ -79,7 +79,7 @@ export default function KanbanBoard(board) {
       var boardSource =
         tempboard[result.source.droppableId].items[result.source.index];
       var colAfterRemove = tempboard[result.source.droppableId].items.filter(
-        (item) => item != boardSource
+        (item) => item !== boardSource
       );
       tempboard[result.source.droppableId].items = colAfterRemove;
       tempboard[result.destination.droppableId].items[
@@ -111,12 +111,14 @@ export default function KanbanBoard(board) {
     setColumns(board.board.data.columns);
   }, [board]);
 
-  const { userC, setUserC } = useContext(UserContext);
-
   const [columns, setColumns] = useState(board.board.data.columns);
 
   const [newItemHidden, setNewItemHidden] = useState(true);
   const [newItemTitle, setNewItemTitle] = useState("");
+  const [newDetails, setNewDetails] = useState("");
+
+  const [modalHidden, setModalHidden] = useState(true);
+  const [modalContent, setModalContent] = useState("INIT CONTENT");
 
   useEffect(() => {
     SyncBoard(board.board.id, columns);
@@ -124,40 +126,90 @@ export default function KanbanBoard(board) {
 
   return (
     <div>
+
+      {/*simple dynamic modal to display task details*/}
+      <div
+        className={`transition-all duration-500 ${modalHidden ? "opacity-0 invisible" : "opacity-100 visible"} z-10 absolute top-0 left-0 w-screen h-screen bg-slate-500 bg-opacity-50 backdrop-blur-sm`}
+      >
+        <div className="opacity-100 w-2/4 h-1/3 mx-auto my-24 rounded-xl bg-slate-50 z-20">
+
+          <div className="relative h-full w-full">
+
+            <div className="absolute top-8 right-4 h-24 w-24 text-2xl font-extrabold">
+            <button className="text-slate-800 hover:text-slate-500" onClick={()=>setModalHidden(true)}>X</button>
+            </div>
+            <div className="p-12">
+
+              <div className="text-xl font-bold">Viewing Task: 
+                <div className="inline text-xl font-semibold">
+                  {" " + modalContent.content}
+                </div>
+              </div>
+
+              <div className="text-lg font-bold my-24">Details: 
+                <div className="inline text-md font-semibold">
+                  {modalContent.details === "" ? " No details provided" : " " + modalContent.details}
+                </div>
+              </div>
+              
+
+            </div>
+             
+          </div>
+                
+        </div>
+      </div>
+
       <div className="text-2xl font-semibold m-4">
         Working On:
         <span className="text-3xl font-bold">"{board.board.data.title}"</span>
       </div>
 
       <div
-        className="bg-purple-300 w-48 p-4 mx-auto rounded-lg text-slate-700 text-sm font-semibold"
+        className="bg-purple-700 w-48 p-2 mx-auto rounded text-slate-100 text-sm font-semibold cursor-pointer hover:bg-purple-800"
         onClick={() => {
           setNewItemHidden(false);
         }}
       >
-        Add New Task
+        <PlusCircleIcon className="inline w-5 h-5" />
+        <div className="inline mx-2">New Task</div>
       </div>
 
       {/*form for new task*/}
-      <div hidden={newItemHidden}>
-        <form className="w-4/5 mx-auto">
-          <div className="flex items-center border-b border-teal-500 py-2">
+      <div
+        hidden={newItemHidden}
+        className="bg-blue-50 p-4 m-4 w-2/5 mx-auto rounded"
+      >
+        <form>
+          <div className="w-4/5 items-center py-2 mx-auto">
+            <div className="font-semibold text-lg">Title:</div>
             <input
-              className="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+              className="appearance-none bg-white rounded-xl border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
               type="text"
               aria-label="Item Title"
               value={newItemTitle}
               onChange={(e) => setNewItemTitle(e.target.value)}
             />
+
+            <div className="font-semibold text-lg pt-4">
+              Details (optional):
+            </div>
+            <textarea 
+            value={newDetails}
+            onChange={(e) => setNewDetails(e.target.value)}
+            className="h-32 resize-y appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+
             <button
-              className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+              className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-sm text-white font-semibold py-1 px-2 rounded disabled:bg-slate-500 disabled:text-slate-300"
               type="submit"
+              disabled={newItemTitle === ""}
               onClick={(e) => {
                 e.preventDefault();
 
                 var task = {
                   id: JSON.stringify(Date.now()),
                   content: newItemTitle,
+                  details: newDetails,
                 };
 
                 OnDragEnd(
@@ -172,6 +224,7 @@ export default function KanbanBoard(board) {
 
                 setNewItemHidden(true);
                 setNewItemTitle("");
+                setNewDetails("");
 
                 SyncBoard(board.board.id, columns);
               }}
@@ -180,7 +233,7 @@ export default function KanbanBoard(board) {
             </button>
 
             <button
-              className="flex-shrink-0 border-transparent border-4 text-teal-500 hover:text-teal-800 text-sm py-1 px-2 rounded"
+              className="flex-shrink-0 border-transparent border-4 text-slate-700 hover:text-slate-800 text-sm py-1 px-2 rounded font-semibold"
               type="button"
               onClick={() => {
                 setNewItemHidden(true);
@@ -224,13 +277,12 @@ export default function KanbanBoard(board) {
                           ref={provided.innerRef}
                           style={{
                             background: snapshot.isDraggingOver
-                              ? "#dbeafe"
+                              ? "#e2e8f0"
                               : "#f5f3ff",
                             padding: 4,
-                            width: 250,
                             minHeight: 500,
                           }}
-                          className="rounded-xl"
+                          className="rounded-xl sm:w-48 md:w-96"
                         >
                           {column.items.map((item, index) => {
                             return (
@@ -256,15 +308,25 @@ export default function KanbanBoard(board) {
                                         color: "#334155",
                                         ...provided.draggableProps.style,
                                       }}
-                                      className="rounded-xl border border-indigo-600"
+                                      className="rounded-xl border border-indigo-600 text-sm"
                                     >
-                                      <div className="m-2 font-semibold">
+                                      <div className="font-semibold">
                                         {item.content}
                                       </div>
 
-                                      <div>
+                                      <div className="pt-5">
                                         <button
-                                          className="border border-slate-500 bg-slate-300 text-slate-500 rounded text-sm font-semibold px-2 mx-4"
+                                          className="border border-slate-500 bg-slate-300 text-slate-500 rounded text-sm font-semibold mx-4 hover:bg-slate-400 p-0.5"
+                                          onClick={() => {
+                                            setModalHidden(false);
+                                            setModalContent(item);
+                                          }}
+                                        >
+                                          <EyeIcon className=" inline h-4 w-4 text-slate-700" />
+                                        </button>
+
+                                        <button
+                                          className="border border-slate-500 bg-slate-300 text-slate-500 rounded text-sm font-semibold mx-4 hover:bg-slate-400 p-0.5"
                                           onClick={() => {
                                             OnDragEnd(
                                               {
@@ -281,7 +343,7 @@ export default function KanbanBoard(board) {
                                             SyncBoard(board.board.id, columns);
                                           }}
                                         >
-                                          X
+                                          <TrashIcon className=" inline h-4 w-4 text-slate-700" />
                                         </button>
                                       </div>
                                     </div>
