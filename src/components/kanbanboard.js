@@ -17,7 +17,7 @@ export default function KanbanBoard(board) {
       copiedItems.unshift(result.task);
       setColumns({
         ...columns,
-        [1]: {
+        "1": {
           ...column,
           items: copiedItems,
         },
@@ -75,7 +75,7 @@ export default function KanbanBoard(board) {
       });
 
       //updating board to reflect the drag and drop state after an item is moved
-      var tempboard = board.board.data.columns;
+      tempboard = board.board.data.columns;
       var boardSource =
         tempboard[result.source.droppableId].items[result.source.index];
       var colAfterRemove = tempboard[result.source.droppableId].items.filter(

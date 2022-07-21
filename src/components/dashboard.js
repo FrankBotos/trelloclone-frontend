@@ -42,8 +42,13 @@ export default function DashBoard(token) {
         return new Date(b.data.created) - new Date(a.data.created);
       });
 
-      //TODO:filter out all boards made by other users
-
+      //filter out all boards made by other users
+      var afterFilter = temp.myKanbans.filter(board=>
+        board.data.uid === token.token
+      )
+      temp.myKanbans = afterFilter;
+      
+      
       setUserC(temp);
 
       if (selectMostRecent) {
@@ -233,7 +238,7 @@ export default function DashBoard(token) {
                   className={
                     activeKanbanID === board.id
                       ? "m-1 p-1 font-extrabold text-md text-slate-700 border-2 border-slate-800 mx-auto rounded-lg bg-fuchsia-100 cursor-pointer"
-                      : "m-1 p-1 font-semibold text-md text-slate-700 cursor-pointer"
+                      : "m-1 p-1 font-semibold text-md text-slate-700 cursor-pointer hover:bg-fuchsia-50 hover:border-2 border-slate-700 hover:font-extrabold rounded-lg"
                   }
                 > 
                     <div className="text-left w-full"><ViewBoardsIcon className="inline w-8 h-8 mr-2"/>{board.data.title}</div>

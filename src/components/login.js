@@ -19,7 +19,12 @@ export default function Login() {
         setAuth(true);
         window.localStorage.setItem("auth", "true");
         userCred.getIdToken().then((token) => {
-          setToken(token);
+
+          //Note: The google token refreshes after approximately 1 hour, meaning it cannot be reliably used to track kanban boards
+          //Instead making use of the provider uid, and using that as a "token"
+          //setToken(token);
+          token = userCred._delegate.uid;
+          setToken(userCred._delegate.uid);
 
           var tempContext = {
             //saving some of this info in context, for later use throughout app
